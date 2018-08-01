@@ -8,6 +8,18 @@
       .container(v-if='authorized')
         button.btn.btn_default.btn_sign-out(@click="handleSignoutClick") Sign Out
 
+        button.btn.btn_default.btn_sign-out(@click="setData") add test event
+
+        .add-event(v-if="addEvent")
+          a(href="#", @click='addEvent = !addEvent').add-event__close х
+          //p(@click="openPicker").add-event__date {{dateNewEvent}}
+
+          //date-picker(placeholder="Дата (2018-04-20)", ref="programaticOpen", :format="format", :opened="formatDate", v-model="dateNewEvent")
+
+          input(type='text' placeholder='dateEvent' v-model='someEvent.summary').add-event__input
+          input(type='text' placeholder='titleEvent' v-model='someEvent.summary').add-event__input
+          input(type='text' placeholder='descEvent' v-model='someEvent.description').add-event__input
+
 
 
       app-header(v-if='authorized')
@@ -48,14 +60,30 @@
         items: undefined,
         api: undefined,
         authorized: false,
+        addEvent: true,
 
-        event: []
+
+        event: [],
+
+        someEvent: {
+          'summary': '',
+          'description': '',
+          'start': {
+            'date': '2018-08-12'
+          },
+          'end': {
+            'date': '2018-08-12'
+          }
+        }
       }
     },
     created() {},
     mounted() {
       this.api = gapi;
       this.handleClientLoad();
+
+
+
     },
 
     methods: {
@@ -80,7 +108,7 @@
         if (isSignedIn) {
           this.authorized = true;
           this.loading = false;
-          this.getData()
+          this.getData();
         } else {
           this.authorized = false;
           this.loading = false;
@@ -99,12 +127,24 @@
               this.authorized = false;
               this.loading = false;
             });
+        this.event = []
       },
-      getData() {                                                 /* Вывод событий */
-        let vm = this;
-        vm.api.client.calendar.events.list({
+
+      setData() {
+        this.api.client.calendar.events.insert({
           'calendarId': 'primary',
-          //'timeMin': (new Date()).toISOString(),                //Ообытия которые только будут
+          'resource': this.someEvent,
+        }).then(response => {
+          this.event = [];
+          this.getData();
+        });
+
+      },
+
+      getData() {                                                 /* Вывод событий */
+        this.api.client.calendar.events.list({
+          'calendarId': 'primary',
+          //'timeMin': (new Date()).toISOString(),                //Cобытия которые только будут
           //'showDeleted': true,                                  //Показывать удаленные события
           'singleEvents': true,
           'maxResults': 100,
@@ -116,8 +156,7 @@
           if (events.length > 0) {
             for (i = 0; i < events.length; i++) {                 // перебор событий
               let event = events[i];
-              let when = event.start.dateTime;                    // when полная Дата события со верменем если событие не на вест день
-
+              let when = event.start.dateTime;                    // when полная Дата события со верменем если событие не на весь день
               if (!when) {                                        // Если событие всего дня то берём дату в формте yyyy-mm-dd
                 when = event.start.date;
               }else {
@@ -125,7 +164,8 @@
               }
               this.event.push({
                 dateE: when,
-                title: event.summary
+                title: event.summary,
+                desc: event.description
               });
             }
           } else {
@@ -274,5 +314,53 @@
 
   .key {
     color: black;
+  }
+
+  .add-event{
+    text-align: left;
+    position: absolute;
+    top: 40px;
+    background: #fff;
+    padding: 24px 20px;
+    border: 1px solid #ccc;
+    width: 300px;
+    z-index: 10;
+    &__input{
+      width: 100%;
+      margin-top: 24px;
+      margin-bottom: 16px;
+      height: 30px;
+      font-size: 12px;
+      padding: 0 6px;
+      border: 1px solid #ccc;
+      box-shadow: inset 0 1px 1px #ccc;
+    }
+    &__date{
+      height: 30px;
+      font-size: 12px;
+      line-height: 30px;
+      padding: 0 6px;
+      border: 1px solid #ccc;
+      box-shadow: inset 0 1px 1px #ccc;
+      position: absolute;
+      width: 258px;
+      z-index: 1;
+      background: #fff;
+    }
+    &__close{
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      font-size: 12px;
+      color: #777;
+      width: 18px;
+      height: 18px;
+      text-align: center;
+      line-height: 18px;
+      &:hover{
+        color: #fff;
+        background: #777;
+      }
+    }
   }
 </style>

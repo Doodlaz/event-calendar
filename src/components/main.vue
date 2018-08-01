@@ -21,7 +21,7 @@
           .event
             .event__wrap(v-if="item.date==i.dateE", v-for="i in event")
               p.event__title {{i.title}}
-              p.event__description {{i.description}}
+              p.event__description {{i.desc}}
 
 
 </template>
@@ -40,20 +40,6 @@ export default {
       months: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'],
 
       dayObj: [],
-
-//      event: [
-//        {
-//          dateE: '2018-6-10',
-//          title: 'Напиться!',
-//          description: 'Витя Костин, Петр Мхайлов'
-//        },
-//        {
-//          dateE: '2018-6-15',
-//          title: 'ДР!',
-//          description: 'Дима Молодцов'
-//        }
-//
-//      ],
 
       toYear: new Date().getFullYear(), //текущий Год
       toDay: new Date().getDate(), //текущий День Месяца
@@ -261,6 +247,7 @@ export default {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    font-size: 11px;
     &__wrap{
       height: 100%;
       background: #c2e4fe;
@@ -275,7 +262,7 @@ export default {
     &__title{
       font-weight: bold;
       color: #666;
-      font-size: 11px;
+      margin-bottom: 5px;
     }
     &__description{
       color: #666;
