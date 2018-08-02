@@ -1,5 +1,17 @@
 <template lang="pug">
   #app.global-wrap
+    .add-event(v-if="openedPopup")
+      .add-event__wrap
+        a(href="#", @click='closePopup').add-event__close х
+
+        //p(@click="openPicker").add-event__date {{dateNewEvent}}
+        //date-picker(placeholder="Дата (2018-04-20)", ref="programaticOpen", :format="format", :opened="formatDate", v-model="dateNewEvent")
+
+        input(type='text' placeholder='dateEventEnd' v-model='newEvent.date').add-event__input
+        input(type='text' placeholder='titleEvent' v-model='newEvent.title').add-event__input
+        input(type='text' placeholder='descEvent' v-model='newEvent.desc').add-event__input
+
+        button.btn.btn_white(type='button', @click='setData') Создать
     .preloader(v-if="loading")
       img(src="static/loading.gif")
     .preloader(v-if="!loading")
@@ -8,21 +20,12 @@
       .container(v-if='authorized')
         button.btn.btn_default.btn_sign-out(@click="handleSignoutClick") Sign Out
 
-        button.btn.btn_default.btn_sign-out(@click="setData") add test event
-
-        .add-event(v-if="addEvent")
-          a(href="#", @click='addEvent = !addEvent').add-event__close х
-          //p(@click="openPicker").add-event__date {{dateNewEvent}}
-
-          //date-picker(placeholder="Дата (2018-04-20)", ref="programaticOpen", :format="format", :opened="formatDate", v-model="dateNewEvent")
-
-          input(type='text' placeholder='dateEvent' v-model='someEvent.summary').add-event__input
-          input(type='text' placeholder='titleEvent' v-model='someEvent.summary').add-event__input
-          input(type='text' placeholder='descEvent' v-model='someEvent.description').add-event__input
 
 
 
-      app-header(v-if='authorized')
+
+
+      app-header(v-if='authorized', @openPopup="openedPopup=$event")
       .login(v-if='!authorized')
         button.btn.btn_default(@click="handleAuthClick") Вход
 
@@ -50,6 +53,7 @@
 
   export default {
     name: 'App',
+
     components: {
       'app-header': appHeader,
       'app-main': appMain
@@ -60,30 +64,25 @@
         items: undefined,
         api: undefined,
         authorized: false,
-        addEvent: true,
+        addEvent: false,
 
+        openedPopup: false,
 
-        event: [],
+        newEvent: {
+          date: '',
+          title: '',
+          desc: ''
+        },
 
-        someEvent: {
-          'summary': '',
-          'description': '',
-          'start': {
-            'date': '2018-08-12'
-          },
-          'end': {
-            'date': '2018-08-12'
-          }
-        }
+        event: []
       }
     },
-    created() {},
+    created() {
+
+    },
     mounted() {
       this.api = gapi;
       this.handleClientLoad();
-
-
-
     },
 
     methods: {
@@ -130,13 +129,35 @@
         this.event = []
       },
 
+      closePopup() {
+        this.newEvent = {
+          date: '',
+          title: '',
+          desc: ''
+        };
+        this.openedPopup = false;
+      },
+
       setData() {
+
+        let someEvent = {
+          'summary': this.newEvent.title,
+          'description': this.newEvent.desc,
+          'start': {
+            'date': this.newEvent.date
+          },
+          'end': {
+            'date': this.newEvent.date
+          }
+        };
+
         this.api.client.calendar.events.insert({
           'calendarId': 'primary',
-          'resource': this.someEvent,
+          'resource': someEvent,
         }).then(response => {
           this.event = [];
           this.getData();
+          this.closePopup();
         });
 
       },
@@ -317,14 +338,33 @@
   }
 
   .add-event{
-    text-align: left;
-    position: absolute;
-    top: 40px;
-    background: #fff;
-    padding: 24px 20px;
-    border: 1px solid #ccc;
-    width: 300px;
-    z-index: 10;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    &__wrap{
+      text-align: left;
+      position: absolute;
+      top: 120px;
+      left: 0;
+      right: 0;
+      margin: auto;
+      background: #fff;
+      padding: 24px 20px;
+      border: 1px solid #ccc;
+      width: 300px;
+      height: 300px;
+      z-index: 10;
+    }
+    &:after{
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+    }
     &__input{
       width: 100%;
       margin-top: 24px;
