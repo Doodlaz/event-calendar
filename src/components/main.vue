@@ -1,7 +1,7 @@
 <template lang="pug">
   section.calendar
-    .container
 
+    .container
       button#authorize-button(style="display: none;") Authorize
       button#signout-button(style="display: none;") Sign Out
 
@@ -11,7 +11,7 @@
           span {{months[toMonth-1]}}
           span {{toYear}}
         a(href="#", @click="nextMonth").calendar__nav-next ►
-
+    .calendar__container
       ul.calendar__week
         li(v-for="val, i in weekDay").calendar__week-day {{val}}
 
@@ -21,7 +21,6 @@
           .event
             .event__wrap(v-if="item.date==i.dateE", v-for="i in event")
               p.event__title {{i.title}}
-              p.event__description {{i.desc}}
 
 
 </template>
@@ -36,7 +35,7 @@ export default {
   data () {
 
     return {
-      weekDay: ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'],
+      weekDay: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
       months: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'],
 
       dayObj: [],
@@ -56,8 +55,7 @@ export default {
     this.createCalendar(this.toYear, this.toMonth) //Вызов Метода который пушит даты текущего месяца в массив day
 
   },
-  mounted(
-  ){
+  mounted(){
 
   },
 
@@ -94,8 +92,13 @@ export default {
 
       // Заполнить пустые ячейки числами предыдущего месяца
       for (let i = 0; i < this.getDay(d); i++) {
+        let month = d.getMonth();
+        if(month < 10){
+          month = '0' + month
+        }
         this.dayObj.push({
           newDay: dPrev - i,
+          date: d.getFullYear() + '-' + month + '-' + (dPrev - i),
           classDay: 'calendar__other-month'
         });
 
@@ -105,6 +108,7 @@ export default {
 
         if(mon == toDate.getMonth() && d.getDate() == toDate.getDate() && d.getFullYear() == toDate.getFullYear()){
           let month = d.getMonth()+1;
+
           let day = d.getDate();
           if(month < 10){
             month = '0' + month
@@ -142,8 +146,19 @@ export default {
       // Заполнить пустые ячейки числами следующего месяца
       if (this.getDay(d) != 0) {
         for (var i = this.getDay(d); i < 7; i++) {
+
+          let month = d.getMonth()+1;
+          let day = d.getDate();
+          if(month < 10){
+            month = '0' + month
+          }
+          if(day < 10){
+            day = '0' + day
+          }
+
           this.dayObj.push({
             newDay: d.getDate(),
+            date: d.getFullYear() + '-' + month + '-' + day,
             classDay: 'calendar__other-month'
           });
           d.setDate(d.getDate() + 1)
@@ -193,36 +208,50 @@ export default {
       }
     }
     &__week{
+      background: #fff;
       display: flex;
       flex-wrap: wrap;
-      border-top: 1px solid #ebebeb;
-      border-left: 1px solid #ebebeb;
+      border-top: 1px solid #e0e0e0;
+      border-left: 1px solid #e0e0e0;
       &-day{
-        color: #999;
+        position: relative;
+        z-index: 1;
+        color: #757575;
+        vertical-align: middle;
+        padding: 10px 10px 0;
       }
     }
     &__table{
-      border-left: 1px solid #ebebeb;
+      border-left: 1px solid #e0e0e0;
       display: flex;
       flex-wrap: wrap;
+      height: calc(100vh - 186px);
     }
     &__day,
     &__week-day{
-      border-bottom: 1px solid #ebebeb;
-      border-right: 1px solid #ebebeb;
+      border-right: 1px solid #e0e0e0;
       width: calc(100% / 7);
       position: relative;
       text-align: left;
-
       font-size: 10px;
       vertical-align: top;
     }
     &__day{
-      height: 120px;
-    }
-    &__week-day{
-      vertical-align: middle;
-      padding: 10px
+      background: #fff;
+      border-bottom: 1px solid #e0e0e0;
+      height: calc(100% / 5);
+      &:nth-of-type(-n+7){
+        &.calendar__to-day{
+          &:before{
+            content: "";
+            display: block;
+            background: #f5f5f5;
+            width: 100%;
+            height: 21px;
+            margin-top: -21px;
+          }
+        }
+      }
     }
     &__week-day span{
       display: block;
@@ -235,37 +264,42 @@ export default {
       color: #666;
     }
     &__to-day{
-      background: #e6e6e6;
+      background: #f5f5f5;
       .label-date {
         color: #fff;
-        text-shadow: 0 1px 2px black;
+        background: #4285f4;
+        border-radius: 50%;
+        height: 20px;
+        width: 20px;
+        top: 5px;
+        left: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
+    }
+    &__container{
+      position: relative;
+      width: 100vw;
     }
   }
   .event{
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    max-height: 100%;
+    padding-top: 30px;
     font-size: 11px;
     &__wrap{
       height: 100%;
-      background: #c2e4fe;
-      padding: 10px;
-      &:first-of-type{
-        padding-top: 30px;
-      }
-      &:not(:first-of-type){
-        border-top: 1px solid #a8a8a8;
+      background: #039BE5;
+      padding: 6px 8px;
+      margin: 6px 2px;
+      border-radius: 4px;
+      .calendar__other-month &{
+        opacity: .5;
       }
     }
     &__title{
       font-weight: bold;
-      color: #666;
-      margin-bottom: 5px;
-    }
-    &__description{
-      color: #666;
+      color: #fff;
     }
   }
 

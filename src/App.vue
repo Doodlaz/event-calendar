@@ -223,7 +223,6 @@
   :-ms-input-placeholder      {color:#ccc;}
 
   body{
-    background: #f1f1f1;
     margin: 0;
     font-family: 'Avenir', Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -234,7 +233,7 @@
 
   }
   .container{
-    width: 900px;
+    padding: 0 20px;
     max-width: 100%;
     margin: 0 auto;
     position: relative;
@@ -269,7 +268,7 @@
     }
     &_sign-out{
       position: absolute;
-      right: 0;
+      right: 20px;
       top: 15px;
       margin: 0;
     }
