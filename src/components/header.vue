@@ -3,7 +3,7 @@
     .container
       .header__wrap
         .header__btn-group
-          button.btn.btn_default(type='button', @click='openPopup') Добавить
+          button.btn.btn_default(type='button', @click='openPopupAdd') Добавить
 
 
 
@@ -38,7 +38,7 @@
 
         format: 'yyyy-MM-dd',
 
-        openedPopup: true
+        openedPopupAdd: true
 
 
       }
@@ -54,10 +54,9 @@
       onLogin (data) {
         this.email = data.email
       },
-      openPopup: function () {
 
-        this.$emit('openPopup', this.openedPopup);
-
+      openPopupAdd: function () {
+        this.$emit('openPopupAdd', this.openedPopupAdd);
       }
     }
   }

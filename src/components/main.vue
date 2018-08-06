@@ -19,7 +19,7 @@
         li(v-for="item in dayObj", :class="item.classDay").calendar__day
           span().label-date {{item.newDay}}
           .event
-            .event__wrap(v-if="item.date==i.dateE", v-for="i in event")
+            .event__wrap(v-if="item.date==i.dateE", v-for="i in event", @click='openPopupInfo')
               p.event__title {{i.title}}
 
 
@@ -30,7 +30,7 @@
 export default {
 
   props: ["event"],
-  name: 'calendar',
+  name: 'main',
 
   data () {
 
@@ -46,6 +46,8 @@ export default {
       toMonth: new Date().getMonth() + 1, //текущий месяц
 
 
+      openedPopupInfo: true,
+
     }
   },
   components: {
@@ -60,6 +62,10 @@ export default {
   },
 
   methods: {
+    openPopupInfo: function () {
+      this.$emit('openPopupInfo', this.openedPopupInfo);
+    },
+
     prevMonth: function () {
       if(this.toMonth > 1){
         this.toMonth -= 1;
@@ -70,6 +76,7 @@ export default {
       this.dayObj.length=0;
       this.createCalendar(this.toYear, this.toMonth); //Вызов Метода который пушит даты следующего месяца в массив day
     },
+
     nextMonth: function () {
       if(this.toMonth < 12){
         this.toMonth += 1;
@@ -165,11 +172,12 @@ export default {
         }
       }
     },
+
     getDay: function (date) {
       let day = date.getDay();
       if (day == 0) day = 7;
       return day - 1;
-    }
+    },
 
   }
 
@@ -288,6 +296,7 @@ export default {
     padding-top: 30px;
     font-size: 11px;
     &__wrap{
+      cursor: pointer;
       height: 100%;
       background: #039BE5;
       padding: 6px 8px;
