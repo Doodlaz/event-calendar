@@ -3,7 +3,7 @@
     //----popups----
     .popup(v-if="openedPopupAdd")
       .popup__wrap
-        a(href="#", @click='closePopupAdd').popup__close х
+        a(href="#", @click='closePopup').popup__close х
 
         //p(@click="openPicker").popup__date {{dateNewEvent}}
         //date-picker(placeholder="Дата (2018-04-20)", ref="programaticOpen", :format="format", :opened="formatDate", v-model="dateNewEvent")
@@ -15,33 +15,27 @@
         button.btn.btn_white(type='button', @click='setData') Создать
 
     .popup(v-if="openedPopupInfo")
-      .popup__wrap.popup__wrap_event-info
+      .popup__wrap.popup__wrap_event-info(v-for="item in dataEventPopup")
         .popup__head
           .popup__wrap-btn
 
             a(href="#", @click='editEvent').popup__btn.popup__btn_edit e
             a(href="#", @click='delEvent').popup__btn.popup__btn_del d
-            a(href="#", @click='closePopupInfo').popup__btn.popup__btn_close х
+            a(href="#", @click='closePopup').popup__btn.popup__btn_close х
+            input(type='text' :value='item.title' readonly)
         .popup__body
           .popup__body-info
             p Дата:
-            input(type='text' value='2018-08-20' readonly)
-          .popup__body-info
-            p Описани:
-            input(type='text' value='qweqweqweqwe' readonly)
+            input(type='text' :value='item.date' readonly)
+          .popup__body-info(v-if="item.desc.length > 1")
+            p Описани: {{item.desc.length}}
+            input(type='text' :value='item.desc' readonly)
           .popup__body-info
             p Имя:
             input(type='text' value='Никита Рыжов' readonly)
-
-
-
-
-
-
+            
     //----popups-END----
-
-
-
+    
     .preloader(v-if="loading")
       img(src="static/loading.gif")
     .global-wrap(v-if="!loading")
@@ -65,7 +59,7 @@
 
 
       main(v-if='authorized')
-        app-main(:event="event", @openPopupInfo="openedPopupInfo=$event")
+        app-main(:event="event", @openPopupInfo="openedPopupInfo=$event", @dataEventPopup="dataEventPopup=$event")
 
 </template>
 
@@ -99,12 +93,16 @@
         openedPopupAdd: false,
         openedPopupInfo: false,
 
+        dataEventPopup: [],
+        
+        
+
         newEvent: {
           date: '',
           title: '',
           desc: ''
         },
-
+        
         event: []
       }
     },
@@ -117,7 +115,7 @@
     },
 
     methods: {
-
+      
       handleClientLoad() {                                        /* При загрузке вызывается загрузка библиотеки auth2 и клиентской библиотеки API. */
         this.api.load('client:auth2', this.initClient);
       },
@@ -161,17 +159,21 @@
         this.event = []
       },
 
-      closePopupAdd() {
+      closePopup() {
         this.newEvent = {
           date: '',
           title: '',
           desc: ''
         };
+        this.openedPopupInfo = false;
         this.openedPopupAdd = false;
       },
 
-      closePopupInfo() {
-        this.openedPopupInfo = false;
+      editEvent() {
+        alert('edit not working')
+      },
+      delEvent() {
+        alert('delete not working')
       },
 
       setData() {
@@ -193,7 +195,7 @@
         }).then(response => {
           this.event = [];
           this.getData();
-          this.closePopupAdd();
+          this.closePopup();
         });
 
       },
@@ -221,7 +223,8 @@
                 when = when.split('T')[0]                         // Иначе если событие с временем то обрезаем всё после часового пояса что бы получить только дату в формате yyyy-mm-dd
               }
               this.event.push({
-                id: eId,
+                id: 'ev-' + i,
+                apiId: eId,
                 dateE: when,
                 title: event.summary,
                 desc: event.description
@@ -412,6 +415,13 @@
         padding: 0;
         border-radius: 4px;
         overflow: hidden;
+        min-height: auto;
+        input{
+          border: none;
+          box-shadow: none;
+          padding-left: 0;
+          background: none;
+        }
       }
     }
 
@@ -419,20 +429,22 @@
       background: #039BE5;
       min-height: 60px;
       display: flex;
+      padding-left: 10px;
+      input{
+        color: #fff;
+        font-size: 16px;
+      }
     }
     &__body{
       background: #fff;
-      padding: 20px;
+      padding: 0 20px;
       &-info{
         padding: 10px 0;
-        border-bottom: 1px solid #eee;
-        p{
-          margin-bottom: 10px;
+        &:not(:last-of-type) {
+          border-bottom: 1px solid #eee;
         }
-        input{
-          border: none;
-          box-shadow: none;
-          padding-left: 0;
+        p{
+          line-height: 30px;
         }
       }
     }
