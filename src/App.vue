@@ -5,8 +5,6 @@
       .popup__wrap
         a(href="#", @click='closePopup').popup__close х
 
-        //p(@click="openPicker").popup__date {{dateNewEvent}}
-        //date-picker(placeholder="Дата (2018-04-20)", ref="programaticOpen", :format="format", :opened="formatDate", v-model="dateNewEvent")
 
         input(type='text' placeholder='dateEventEnd' v-model='newEvent.date').popup__input
         input(type='text' placeholder='titleEvent' v-model='newEvent.title').popup__input
@@ -15,24 +13,35 @@
         button.btn.btn_white(type='button', @click='setData') Создать
 
     .popup(v-if="openedPopupInfo")
-      .popup__wrap.popup__wrap_event-info(v-for="item in dataEventPopup")
+      .popup__wrap.event-info.popup__wrap_event-info(v-for="item in event", v-if="item.id == dataEventPopup", :class="{ 'data-edit' : dataEdit }")
         .popup__head
           .popup__wrap-btn
 
-            a(href="#", @click='editEvent').popup__btn.popup__btn_edit e
-            a(href="#", @click='delEvent').popup__btn.popup__btn_del d
-            a(href="#", @click='closePopup').popup__btn.popup__btn_close х
-            input(type='text' :value='item.title' readonly)
+            a(href="#", @click='editEvent', v-if="!dataEdit").popup__btn.popup__btn_edit
+              font-awesome-icon(icon="pen").icon
+
+            a(href="#", @click='editEventOk(item.apiId)', v-if="dataEdit").popup__btn.popup__btn_edit
+              font-awesome-icon(icon="check").icon
+
+            a(href="#", @click='delEvent(item.apiId)').popup__btn.popup__btn_del
+              font-awesome-icon(icon="trash").icon
+
+            a(href="#", @click='closePopup').popup__btn.popup__btn_close
+              font-awesome-icon(icon="times").icon
+            .event-info__title(:contenteditable="dataEdit") {{ item.title }}
         .popup__body
-          .popup__body-info
-            p Дата:
-            input(type='text' :value='item.date' readonly)
-          .popup__body-info(v-if="item.desc.length > 1")
-            p Описани: {{item.desc.length}}
-            input(type='text' :value='item.desc' readonly)
-          .popup__body-info
-            p Имя:
-            input(type='text' value='Никита Рыжов' readonly)
+
+          .event-info__item
+            font-awesome-icon(icon="clock").event-info__icon
+            .event-info__data(:contenteditable="dataEdit") {{ item.dateE }}
+          .event-info__item(v-if="item.desc.length > 1")
+
+            font-awesome-icon(icon="align-left").event-info__icon
+            .event-info__data(:contenteditable="dataEdit") {{ item.desc }}
+
+          .event-info__item
+            font-awesome-icon(icon="user").event-info__icon
+            .event-info__text Никита Рыжов
             
     //----popups-END----
     
@@ -84,6 +93,7 @@
     },
     data() {
       return {
+        test: '',
         loading: true,
         items: undefined,
         api: undefined,
@@ -92,8 +102,10 @@
 
         openedPopupAdd: false,
         openedPopupInfo: false,
+        dataEdit: false,
 
-        dataEventPopup: [],
+
+        dataEventPopup: '',
         
         
 
@@ -101,6 +113,12 @@
           date: '',
           title: '',
           desc: ''
+        },
+
+        updateEvent: {
+          date: '2018-08-29',
+          title: 'Новый тайтл',
+          desc: 'Новое описание'
         },
         
         event: []
@@ -167,13 +185,51 @@
         };
         this.openedPopupInfo = false;
         this.openedPopupAdd = false;
+        this.dataEdit = false;
       },
 
       editEvent() {
-        alert('edit not working')
+        this.dataEdit = true
       },
-      delEvent() {
-        alert('delete not working')
+
+      editEventOk(apiId) {
+
+        this.dataEdit = false;
+
+        let someEvent = {
+          'summary': this.updateEvent.title,
+          'description': this.updateEvent.desc,
+          'start': {
+            'date': this.updateEvent.date
+          },
+          'end': {
+            'date': this.updateEvent.date
+          }
+        };
+
+        this.api.client.calendar.events.update({
+          'calendarId': 'primary',
+          'eventId': apiId,
+          'resource': someEvent,
+        }).then(response => {
+          this.event = [];
+          this.getData();
+          this.closePopup();
+        });
+
+      },
+
+      delEvent(apiId) {
+
+        this.api.client.calendar.events.delete({
+          'calendarId': 'primary',
+          'eventId': apiId
+        }).then(response => {
+          this.event = [];
+          this.getData();
+          this.closePopup();
+        });
+
       },
 
       setData() {
@@ -222,12 +278,17 @@
               }else {
                 when = when.split('T')[0]                         // Иначе если событие с временем то обрезаем всё после часового пояса что бы получить только дату в формате yyyy-mm-dd
               }
+              let desc = event.description;
+              if(desc == undefined){
+                desc = '';
+              }
+
               this.event.push({
                 id: 'ev-' + i,
                 apiId: eId,
                 dateE: when,
                 title: event.summary,
-                desc: event.description
+                desc: desc
               });
             }
           } else {
@@ -272,14 +333,21 @@
     color: #2c3e50;
     font-size: 14px;
   }
-  input{
+  input,
+  textarea{
     width: 100%;
-    height: 30px;
-    font-size: 12px;
     padding: 0 6px;
     border: 1px solid #ccc;
     -webkit-box-shadow: inset 0 1px 1px #ccc;
     box-shadow: inset 0 1px 1px #ccc;
+    font-size: 14px;
+  }
+  input{
+    height: 30px;
+  }
+  textarea{
+    font-family: 'Avenir', Helvetica, Arial, sans-serif;
+
   }
   .container{
     padding: 0 20px;
@@ -411,17 +479,12 @@
         flex-wrap: wrap;
         justify-content: flex-end;
       }
+
       &_event-info{
         padding: 0;
         border-radius: 4px;
         overflow: hidden;
-        min-height: auto;
-        input{
-          border: none;
-          box-shadow: none;
-          padding-left: 0;
-          background: none;
-        }
+        min-height: 0;
       }
     }
 
@@ -438,15 +501,6 @@
     &__body{
       background: #fff;
       padding: 0 20px;
-      &-info{
-        padding: 10px 0;
-        &:not(:last-of-type) {
-          border-bottom: 1px solid #eee;
-        }
-        p{
-          line-height: 30px;
-        }
-      }
     }
 
     &__btn{
@@ -457,9 +511,20 @@
       justify-content: center;
       border-radius: 50%;
       color: #fff;
+      .icon{
+        transition: .3s;
+        opacity: .8;
+        path {
+          fill: #fff;
+        }
+      }
       &:hover{
         background: rgba(255, 255, 255, 0.15);
+        .icon{
+          opacity: 1;
+        }
       }
+
       &_close{}
       &_edit{}
       &_del{}
@@ -514,6 +579,68 @@
     }
   }
 
+  .event-info{
+    &__item{
+      display: flex;
+      &:not(:last-of-type) {
+        border-bottom: 1px solid #eee;
+      }
+      p{
+        line-height: 30px;
+      }
+    }
+    &__title{
+      padding: 7px 0;
+      margin: 10px 10px 0 30px;
+      width: 100%;
+      font-size: 16px;
+      color: #ffffff;
+      border-bottom: 1px solid transparent;
+    }
+    &__data{
+      padding: 17px 0;
+      width: 100%;
+      font-size: 14px;
+      transition: border .3s;
+      border: 1px solid transparent;
+    }
+    &__text{
+      width: 100%;
+      font-size: 14px;
+      padding: 17px 0;
+    }
+    &__icon{
+      margin: 17px 16px 0 0;
+
+    }
+    &.data-edit{
+      .event-info__title{
+        padding: 7px 8px;
+        margin-left: 22px;
+        border-color: rgba(255, 255, 255, 0.8);
+      }
+      .event-info__data{
+        padding: 7px 8px;
+        margin-left: -8px;
+        border-color: #ccc;
+        background: rgba(204, 204, 204, 0.1);
+      }
+      .event-info__text{
+        padding: 7px 0;
+      }
+      .event-info__item{
+        border: none;
+        padding: 10px 0 11px;
+        &:last-of-type{
+          padding-bottom: 10px;
+        }
+      }
+      .event-info__icon{
+        margin: 7px 16px 0 0;
+      }
+    }
+  }
+
   .preloader{
     width: 100vw;
     height: 100vh;
@@ -522,4 +649,5 @@
     align-items: center;
     justify-content: center;
   }
+
 </style>

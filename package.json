@@ -10,6 +10,13 @@
     "build": "node build/build.js"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free-regular": "^5.0.13",
+    "@fortawesome/fontawesome-svg-core": "^1.2.2",
+    "@fortawesome/free-regular-svg-icons": "^5.2.0",
+    "@fortawesome/free-solid-svg-icons": "^5.2.0",
+    "@fortawesome/vue-fontawesome": "^0.1.1",
+    "i": "^0.3.6",
+    "npm": "^6.3.0",
     "vue": "^2.5.2",
     "vue2-autocomplete-js": "^0.2.2",
     "vuejs-datepicker": "^1.5.2"

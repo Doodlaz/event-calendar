@@ -19,7 +19,7 @@
         li(v-for="item in dayObj", :class="item.classDay").calendar__day
           span().label-date {{item.newDay}}
           .event
-            .event__wrap(v-if="item.date==i.dateE", v-for="i in event", :data-id='i.id', @click='openPopupInfo')
+            .event__wrap(v-if="item.date==i.dateE", v-for="i in event", @click='openPopupInfo(i.id)')
               p.event__title(:data-id='i.id') {{i.title}}
 
 
@@ -48,7 +48,7 @@ export default {
 
       openedPopupInfo: true,
 
-      dataEventPopup: [],
+      dataEventPopup: '',
       
 
     }
@@ -65,36 +65,10 @@ export default {
   },
 
   methods: {
-    openPopupInfo: function (e) {
+    openPopupInfo: function (id) {
       this.$emit('openPopupInfo', this.openedPopupInfo);
 
-      let dataId = e.target.getAttribute("data-id"),
-          id = '',
-          apiId = '',
-          date = '',
-          desc = '',
-          title = '';
-      this.dataEventPopup = [];
-      
-      this.event.filter(function (item) {
-        if(item.id == dataId) {
-          id = item.id;
-          apiId = item.apiId;
-          date = item.dateE;
-          desc = item.desc;
-          title = item.title;
-        }
-      });
-      if(desc == undefined){
-        desc = '';
-      }
-      this.dataEventPopup.push({
-        id: id,
-        apiId: apiId,
-        date: date,
-        desc: desc,
-        title: title
-      });
+      this.dataEventPopup = id;
 
       this.$emit('dataEventPopup', this.dataEventPopup);
     },
