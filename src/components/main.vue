@@ -1,6 +1,6 @@
 <template lang="pug">
   section.calendar
-
+  
     .container
       button#authorize-button(style="display: none;") Authorize
       button#signout-button(style="display: none;") Sign Out
@@ -19,8 +19,8 @@
         li(v-for="item in dayObj", :class="item.classDay").calendar__day
           span().label-date {{item.newDay}}
           .event
-            .event__wrap(v-if="item.date==i.dateE", v-for="i in event", @click='openPopupInfo')
-              p.event__title {{i.title}}
+            .event__wrap(v-if="item.date==i.dateE", v-for="i in event", :data-id='i.id', @click='openPopupInfo')
+              p.event__title(:data-id='i.id') {{i.title}}
 
 
 </template>
@@ -30,7 +30,7 @@
 export default {
 
   props: ["event"],
-  name: 'main',
+  name: 'MyMain',
 
   data () {
 
@@ -48,6 +48,9 @@ export default {
 
       openedPopupInfo: true,
 
+      dataEventPopup: [],
+      
+
     }
   },
   components: {
@@ -62,8 +65,38 @@ export default {
   },
 
   methods: {
-    openPopupInfo: function () {
+    openPopupInfo: function (e) {
       this.$emit('openPopupInfo', this.openedPopupInfo);
+
+      let dataId = e.target.getAttribute("data-id"),
+          id = '',
+          apiId = '',
+          date = '',
+          desc = '',
+          title = '';
+      this.dataEventPopup = [];
+      
+      this.event.filter(function (item) {
+        if(item.id == dataId) {
+          id = item.id;
+          apiId = item.apiId;
+          date = item.dateE;
+          desc = item.desc;
+          title = item.title;
+        }
+      });
+      if(desc == undefined){
+        desc = '';
+      }
+      this.dataEventPopup.push({
+        id: id,
+        apiId: apiId,
+        date: date,
+        desc: desc,
+        title: title
+      });
+
+      this.$emit('dataEventPopup', this.dataEventPopup);
     },
 
     prevMonth: function () {
