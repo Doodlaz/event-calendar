@@ -7,7 +7,7 @@
 
 
 
-          a(href='/').btn.btn_default Обновить
+          a(href='/', @click='refresh').btn.btn_default Обновить
 
         appSearch
 
@@ -21,6 +21,8 @@
   import appSearch from './search'
   import mainBlok from './main.vue'
   export default {
+
+    props: ["event"],
 
     name: 'my-header',
 
@@ -57,6 +59,9 @@
 
       openPopupAdd: function () {
         this.$emit('openPopupAdd', this.openedPopupAdd);
+      },
+      refresh: function () {
+        
       }
     }
   }

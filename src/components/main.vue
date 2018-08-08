@@ -19,7 +19,7 @@
         li(v-for="item in dayObj", :class="item.classDay").calendar__day
           span().label-date {{item.newDay}}
           .event
-            .event__wrap(v-if="item.date==i.dateE", v-for="i in event", @click='openPopupInfo(i.id)')
+            .event__wrap(v-if="item.date==i.dateE", v-for="i in event", @click='openPopupInfo(i)')
               p.event__title(:data-id='i.id') {{i.title}}
 
 
@@ -48,8 +48,7 @@ export default {
 
       openedPopupInfo: true,
 
-      dataEventPopup: '',
-      
+      updateEvent: [],
 
     }
   },
@@ -65,12 +64,12 @@ export default {
   },
 
   methods: {
-    openPopupInfo: function (id) {
+    openPopupInfo: function (item) {
+
       this.$emit('openPopupInfo', this.openedPopupInfo);
 
-      this.dataEventPopup = id;
-
-      this.$emit('dataEventPopup', this.dataEventPopup);
+      this.updateEvent[0] = item;
+      this.$emit('updateEvent', this.updateEvent);
     },
 
     prevMonth: function () {

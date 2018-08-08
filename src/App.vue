@@ -3,78 +3,69 @@
     //----popups----
     .popup(v-if="openedPopupAdd")
       .popup__wrap
-        a(href="#", @click='closePopup').popup__close х
-
-
-        input(type='text' placeholder='dateEventEnd' v-model='newEvent.date').popup__input
-        input(type='text' placeholder='titleEvent' v-model='newEvent.title').popup__input
-        input(type='text' placeholder='descEvent' v-model='newEvent.desc').popup__input
-
-        button.btn.btn_white(type='button', @click='setData') Создать
-
-    .popup(v-if="openedPopupInfo")
-      .popup__wrap.event-info.popup__wrap_event-info(v-for="item in event", v-if="item.id == dataEventPopup", :class="{ 'data-edit' : dataEdit }")
         .popup__head
           .popup__wrap-btn
-
-            a(href="#", @click='editEvent', v-if="!dataEdit").popup__btn.popup__btn_edit
-              font-awesome-icon(icon="pen").icon
-
-            a(href="#", @click='editEventOk(item.apiId)', v-if="dataEdit").popup__btn.popup__btn_edit
-              font-awesome-icon(icon="check").icon
-
-            a(href="#", @click='delEvent(item.apiId)').popup__btn.popup__btn_del
-              font-awesome-icon(icon="trash").icon
-
             a(href="#", @click='closePopup').popup__btn.popup__btn_close
               font-awesome-icon(icon="times").icon
-            .event-info__title(:contenteditable="dataEdit") {{ item.title }}
-        .popup__body
 
+        .popup__body
+          input(type='text' placeholder='dateEventEnd' v-model='newEvent.date').popup__input
+          input(type='text' placeholder='titleEvent' v-model='newEvent.title').popup__input
+          input(type='text' placeholder='descEvent' v-model='newEvent.desc').popup__input
+
+          button.btn.btn_white(type='button', @click='setData') Создать
+
+    .popup(v-if="openedPopupInfo")
+      .popup__wrap.event-info.popup__wrap_event-info(v-for="item in updateEvent", :class="{ 'data-edit' : dataEdit }")
+        .popup__head
+          .popup__wrap-btn
+            a(href="#", @click='editEvent', v-if="!dataEdit").popup__btn.popup__btn_edit
+              font-awesome-icon(icon="pen").icon
+            a(href="#", @click='editEventOk(item.apiId)', v-if="dataEdit").popup__btn.popup__btn_edit
+              font-awesome-icon(icon="check").icon
+            a(href="#", @click='delEvent(item.apiId)').popup__btn.popup__btn_del
+              font-awesome-icon(icon="trash").icon
+            a(href="#", @click='closePopup').popup__btn.popup__btn_close
+              font-awesome-icon(icon="times").icon
+            input(type='text', v-model='item.title', :readonly="!dataEdit").event-info__title
+
+        .popup__body
           .event-info__item
             font-awesome-icon(icon="clock").event-info__icon
-            .event-info__data(:contenteditable="dataEdit") {{ item.dateE }}
-          .event-info__item(v-if="item.desc.length > 1")
-
+            input(type='text', v-model='item.dateE', :readonly="!dataEdit").event-info__data
+          .event-info__item
+            //(v-if="item.desc.length > 1")
             font-awesome-icon(icon="align-left").event-info__icon
-            .event-info__data(:contenteditable="dataEdit") {{ item.desc }}
-
+            input(type='text', v-model='item.desc', :readonly="!dataEdit").event-info__data
           .event-info__item
             font-awesome-icon(icon="user").event-info__icon
-            .event-info__text Никита Рыжов
-            
+            input(type='text', value='Никита Рыжов', :readonly="false").event-info__text
+
     //----popups-END----
-    
+
     .preloader(v-if="loading")
       img(src="static/loading.gif")
     .global-wrap(v-if="!loading")
 
-
       .container(v-if='authorized')
         button.btn.btn_default.btn_sign-out(@click="handleSignoutClick") Sign Out
 
-
-
-
-
-
-      app-header(v-if='authorized', @openPopupAdd="openedPopupAdd=$event")
+      app-header(:event="event", v-if='authorized', @openPopupAdd="openedPopupAdd=$event")
       .login(v-if='!authorized')
         button.btn.btn_default(@click="handleAuthClick") Вход
-
 
       .container(v-if="authorized && items")
         pre(v-html="items")
 
-
       main(v-if='authorized')
-        app-main(:event="event", @openPopupInfo="openedPopupInfo=$event", @dataEventPopup="dataEventPopup=$event")
+        app-main(:event="event", @openPopupInfo="openedPopupInfo=$event", @updateEvent="updateEvent=$event")
 
 </template>
 
 
 
 <script>
+
   const CLIENT_ID = '386151755100-5ju0g8mqqhqtec6a9prchuc5uhdbjd2e.apps.googleusercontent.com';
   const API_KEY = 'AIzaSyBdX5COqAwDLuDnDDh867xv9k4_I3HdPQI';
   const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'];
@@ -97,17 +88,14 @@
         loading: true,
         items: undefined,
         api: undefined,
+
         authorized: false,
         addEvent: false,
-
         openedPopupAdd: false,
         openedPopupInfo: false,
         dataEdit: false,
 
-
-        dataEventPopup: '',
-        
-        
+        updateEvent: [],
 
         newEvent: {
           date: '',
@@ -115,31 +103,27 @@
           desc: ''
         },
 
-        updateEvent: {
-          date: '2018-08-29',
-          title: 'Новый тайтл',
-          desc: 'Новое описание'
-        },
-        
         event: []
       }
     },
-    created() {
-
-    },
+    created() {},
     mounted() {
+
       this.api = gapi;
       this.handleClientLoad();
+
     },
 
     methods: {
       
       handleClientLoad() {                                        /* При загрузке вызывается загрузка библиотеки auth2 и клиентской библиотеки API. */
+
         this.api.load('client:auth2', this.initClient);
+
       },
       initClient() {                                              /* Инициализирует клиентскую библиотеку API и настраивает слушателей состояния входа. */
-        let vm = this;
 
+        let vm = this;
         vm.api.client.init({
           apiKey: API_KEY,
           clientId: CLIENT_ID,
@@ -150,8 +134,10 @@
           vm.api.auth2.getAuthInstance().isSignedIn.listen(vm.updateSigninStatus);
           vm.updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
         });
+
       },
       updateSigninStatus(isSignedIn) {
+
         if (isSignedIn) {
           this.authorized = true;
           this.loading = false;
@@ -160,73 +146,75 @@
           this.authorized = false;
           this.loading = false;
         }
+
       },
       handleAuthClick(event) {                                    /* Вход */
+
         Promise.resolve(this.api.auth2.getAuthInstance().signIn())
             .then(_ => {
               this.authorized = true;
               this.loading = false;
             });
+
       },
       handleSignoutClick(event) {                                 /* Выход */
+
         Promise.resolve(this.api.auth2.getAuthInstance().signOut())
             .then(_ => {
               this.authorized = false;
               this.loading = false;
             });
         this.event = []
+
       },
 
       closePopup() {
         this.newEvent = {
-          date: '',
+          date: '2018-08-20',
           title: '',
           desc: ''
         };
         this.openedPopupInfo = false;
         this.openedPopupAdd = false;
         this.dataEdit = false;
+        this.event = [];
+        this.getData();
       },
 
       editEvent() {
-        this.dataEdit = true
+        this.dataEdit = true; // Резрешить редактирование
       },
 
       editEventOk(apiId) {
 
-        this.dataEdit = false;
-
-        let someEvent = {
-          'summary': this.updateEvent.title,
-          'description': this.updateEvent.desc,
+        this.dataEdit = false;  // Запретить редактирование
+        let someEvent = {       // Объекат с новыми данными события
+          'summary': this.updateEvent[0].title,
+          'description': this.updateEvent[0].desc,
           'start': {
-            'date': this.updateEvent.date
+            'date': this.updateEvent[0].dateE
           },
           'end': {
-            'date': this.updateEvent.date
+            'date': this.updateEvent[0].dateE
           }
         };
-
-        this.api.client.calendar.events.update({
+        this.api.client.calendar.events.update({    // Обновление события по eventId
           'calendarId': 'primary',
           'eventId': apiId,
-          'resource': someEvent,
+          'resource': someEvent, // Объекат с новыми данными события
         }).then(response => {
           this.event = [];
           this.getData();
-          this.closePopup();
         });
 
       },
 
       delEvent(apiId) {
 
-        this.api.client.calendar.events.delete({
+        this.api.client.calendar.events.delete({    // Удаление события по eventId
           'calendarId': 'primary',
           'eventId': apiId
         }).then(response => {
-          this.event = [];
-          this.getData();
           this.closePopup();
         });
 
@@ -249,8 +237,6 @@
           'calendarId': 'primary',
           'resource': someEvent,
         }).then(response => {
-          this.event = [];
-          this.getData();
           this.closePopup();
         });
 
@@ -341,6 +327,7 @@
     -webkit-box-shadow: inset 0 1px 1px #ccc;
     box-shadow: inset 0 1px 1px #ccc;
     font-size: 14px;
+    border-radius: 4px;
   }
   input{
     height: 30px;
@@ -466,11 +453,14 @@
       right: 0;
       margin: auto;
       background: #fff;
-      padding: 24px 20px;
       border: 1px solid #ccc;
       width: 300px;
-      min-height: 300px;
       z-index: 10;
+
+      padding: 0;
+      border-radius: 4px;
+      overflow: hidden;
+      min-height: 0;
 
       &-btn{
         padding: 10px;
@@ -481,10 +471,9 @@
       }
 
       &_event-info{
-        padding: 0;
-        border-radius: 4px;
-        overflow: hidden;
-        min-height: 0;
+        .popup__body{
+          padding: 0 20px;
+        }
       }
     }
 
@@ -493,14 +482,10 @@
       min-height: 60px;
       display: flex;
       padding-left: 10px;
-      input{
-        color: #fff;
-        font-size: 16px;
-      }
     }
     &__body{
       background: #fff;
-      padding: 0 20px;
+      padding: 20px;
     }
 
     &__btn{
@@ -538,17 +523,10 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.95);
     }
     &__input{
-      width: 100%;
-      margin-top: 24px;
-      margin-bottom: 16px;
-      height: 30px;
-      font-size: 12px;
-      padding: 0 6px;
-      border: 1px solid #ccc;
-      box-shadow: inset 0 1px 1px #ccc;
+      margin-bottom: 20px;
     }
     &__date{
       height: 30px;
@@ -582,6 +560,7 @@
   .event-info{
     &__item{
       display: flex;
+      min-height: 54px;
       &:not(:last-of-type) {
         border-bottom: 1px solid #eee;
       }
@@ -589,28 +568,35 @@
         line-height: 30px;
       }
     }
+    input,
+    textarea{
+      width: 100%;
+      font-size: 14px;
+      box-shadow: none;
+      height: auto;
+      border: none;
+    }
     &__title{
       padding: 7px 0;
       margin: 10px 10px 0 30px;
       width: 100%;
       font-size: 16px;
       color: #ffffff;
+      border: none;
       border-bottom: 1px solid transparent;
+      background: none;
+      box-shadow: none;
     }
     &__data{
       padding: 17px 0;
-      width: 100%;
-      font-size: 14px;
       transition: border .3s;
       border: 1px solid transparent;
     }
     &__text{
-      width: 100%;
-      font-size: 14px;
       padding: 17px 0;
     }
     &__icon{
-      margin: 17px 16px 0 0;
+      margin: 20px 16px 0 0;
 
     }
     &.data-edit{
