@@ -33,13 +33,15 @@
           .event-info__item
             font-awesome-icon(icon="clock").event-info__icon
             input(type='text', v-model='item.dateE', :readonly="!dataEdit").event-info__data
-          .event-info__item
-            //(v-if="item.desc.length > 1")
+
+          .event-info__item(v-if="item.desc.length > 1 || dataEdit")
             font-awesome-icon(icon="align-left").event-info__icon
-            input(type='text', v-model='item.desc', :readonly="!dataEdit").event-info__data
+            .event-info__data(v-if='!dataEdit') {{item.desc}}
+            textarea(v-model='item.desc', v-if='dataEdit').event-info__data
+
           .event-info__item
             font-awesome-icon(icon="user").event-info__icon
-            input(type='text', value='Никита Рыжов', :readonly="false").event-info__text
+            input(type='text', value='Никита Рыжов', :readonly="true").event-info__text
 
     //----popups-END----
 
@@ -324,8 +326,6 @@
     width: 100%;
     padding: 0 6px;
     border: 1px solid #ccc;
-    -webkit-box-shadow: inset 0 1px 1px #ccc;
-    box-shadow: inset 0 1px 1px #ccc;
     font-size: 14px;
     border-radius: 4px;
   }
@@ -572,9 +572,12 @@
     textarea{
       width: 100%;
       font-size: 14px;
-      box-shadow: none;
       height: auto;
-      border: none;
+      transition: .3s;
+      border: 1px solid transparent;
+    }
+    textarea{
+      min-height: 140px;
     }
     &__title{
       padding: 7px 0;
@@ -591,6 +594,7 @@
       padding: 17px 0;
       transition: border .3s;
       border: 1px solid transparent;
+      resize: none;
     }
     &__text{
       padding: 17px 0;
@@ -612,7 +616,8 @@
         background: rgba(204, 204, 204, 0.1);
       }
       .event-info__text{
-        padding: 7px 0;
+        padding: 7px 8px;
+        margin-left: -8px;
       }
       .event-info__item{
         border: none;
@@ -623,6 +628,10 @@
       }
       .event-info__icon{
         margin: 7px 16px 0 0;
+      }
+      input,
+      textarea{
+        border-color:  #ccc;
       }
     }
   }
