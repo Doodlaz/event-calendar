@@ -1,26 +1,26 @@
-<template lang="pug">
-  section.calendar
+<template lang='pug'>
+  section.calendar(ref='huy')
   
     .container
-      button#authorize-button(style="display: none;") Authorize
-      button#signout-button(style="display: none;") Sign Out
+      button#authorize-button(style='display: none;') Authorize
+      button#signout-button(style='display: none;') Sign Out
 
       .calendar__nav
-        a(href="#", @click="prevMonth").calendar__nav-prev ◄
+        a(href='#', @click='prevMonth').calendar__nav-prev ◄
         .calendar__nav-text
           span {{months[toMonth-1]}}
           span {{toYear}}
-        a(href="#", @click="nextMonth").calendar__nav-next ►
+        a(href='#', @click='nextMonth').calendar__nav-next ►
     .calendar__container
       ul.calendar__week
-        li(v-for="val, i in weekDay").calendar__week-day {{val}}
+        li(v-for='val, i in weekDay').calendar__week-day {{val}}
 
       ul.calendar__table
-        li(v-for="item in dayObj", :class="item.classDay").calendar__day
+        li(v-for='item in dayObj', :class='item.classDay', @click='testClick(item.date)').calendar__day
           span().label-date {{item.newDay}}
           .event
-            .event__wrap(v-if="item.date==i.dateE", v-for="i in event", @click='openPopupInfo(i)')
-              p.event__title(:data-id='i.id') {{i.title}}
+            .event__wrap(v-if='item.date==i.dateE', v-for='i in event', @click.stop='openPopupInfo(i)')
+              p.event__title {{i.title}}
 
 
 </template>
@@ -29,7 +29,7 @@
 
 export default {
 
-  props: ["event"],
+  props: ['event'],
   name: 'MyMain',
 
   data () {
@@ -49,6 +49,7 @@ export default {
       openedPopupInfo: true,
 
       updateEvent: [],
+      newEventDate: ''
 
     }
   },
@@ -71,6 +72,20 @@ export default {
       this.updateEvent[0] = item;
       this.$emit('updateEvent', this.updateEvent);
     },
+
+    testClick: function (item) {
+
+
+      this.newEventDate = item;
+      console.log(this.newEventDate);
+
+      this.$emit('newEventDate', this.newEventDate);
+
+
+      this.$parent.$emit('setDataUpdate');
+    },
+
+
 
     prevMonth: function () {
       if(this.toMonth > 1){
@@ -192,8 +207,8 @@ export default {
 </script>
 
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style lang="scss" scoped>
+<!-- Add 'scoped' attribute to limit CSS to this component only -->
+<style lang='scss' scoped>
   .calendar{
     &__nav{
       margin: 20px 0;
@@ -257,7 +272,7 @@ export default {
       &:nth-of-type(-n+7){
         &.calendar__to-day{
           &:before{
-            content: "";
+            content: '';
             display: block;
             background: #f5f5f5;
             width: 100%;

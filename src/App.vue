@@ -9,7 +9,7 @@
               font-awesome-icon(icon="times").icon
 
         .popup__body
-          input(type='text' placeholder='dateEventEnd' v-model='newEvent.date').popup__input
+          date-picker(v-model="newEvent.date", :lang="datePickerLang").popup__input
           input(type='text' placeholder='titleEvent' v-model='newEvent.title').popup__input
           input(type='text' placeholder='descEvent' v-model='newEvent.desc').popup__input
 
@@ -27,7 +27,8 @@
               font-awesome-icon(icon="trash").icon
             a(href="#", @click='closePopup').popup__btn.popup__btn_close
               font-awesome-icon(icon="times").icon
-            input(type='text', v-model='item.title', :readonly="!dataEdit").event-info__title
+            .event-info__title(v-if='!dataEdit') {{item.title}}
+            input(type='text', v-model='item.title', v-if='dataEdit').event-info__title
 
         .popup__body
           .event-info__item
@@ -39,9 +40,9 @@
             .event-info__data(v-if='!dataEdit') {{item.desc}}
             textarea(v-model='item.desc', v-if='dataEdit').event-info__data
 
-          .event-info__item
+          .event-info__item(v-if="item.creatorName.length > 1 || dataEdit")
             font-awesome-icon(icon="user").event-info__icon
-            input(type='text', value='Никита Рыжов', :readonly="true").event-info__text
+            p.event-info__text {{item.creatorName}}
 
     //----popups-END----
 
@@ -59,53 +60,71 @@
       .container(v-if="authorized && items")
         pre(v-html="items")
 
+
+
       main(v-if='authorized')
-        app-main(:event="event", @openPopupInfo="openedPopupInfo=$event", @updateEvent="updateEvent=$event")
+        app-main(:event="event", @openPopupInfo="openedPopupInfo=$event", @updateEvent="updateEvent=$event", @newEventDate="newEventDate=$event")
 
 </template>
 
 
 
 <script>
-
   const CLIENT_ID = '386151755100-5ju0g8mqqhqtec6a9prchuc5uhdbjd2e.apps.googleusercontent.com';
   const API_KEY = 'AIzaSyBdX5COqAwDLuDnDDh867xv9k4_I3HdPQI';
   const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'];
   const SCOPES = 'https://www.googleapis.com/auth/calendar';
 
 
-  import appHeader from './components/header'
-  import appMain from './components/main'
+  import AppHeader from './components/header'
+  import AppMain from './components/main'
+  import DatePicker from 'vue2-datepicker'
 
   export default {
     name: 'App',
 
     components: {
-      'app-header': appHeader,
-      'app-main': appMain
+      AppHeader,
+      AppMain,
+      DatePicker
     },
     data() {
       return {
-        test: '',
+
+        lang: '2018-08-19T21:00:00.000Z',
+
         loading: true,
         items: undefined,
+        authorized: false,
         api: undefined,
 
-        authorized: false,
-        addEvent: false,
+        //---Popups---
         openedPopupAdd: false,
         openedPopupInfo: false,
+        addEvent: false,
         dataEdit: false,
 
+        //---Events---
         updateEvent: [],
-
+        newEventDate: '',
         newEvent: {
           date: '',
-          title: '',
+          title: '(Нет заголовка)',
           desc: ''
         },
+        event: [],
 
-        event: []
+        //---Datepicker---
+        datePickerValue: '',
+        datePickerLang: {
+          days: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+          months: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'],
+          placeholder: {
+            date: 'Выберите дату',
+            dateRange: 'Select Date Range'
+          }
+        }
+
       }
     },
     created() {},
@@ -113,6 +132,9 @@
 
       this.api = gapi;
       this.handleClientLoad();
+
+      this.$on('setDataUpdate', this.setDataUpdate);
+      this.$on('getData', this.getData);
 
     },
 
@@ -172,15 +194,18 @@
 
       closePopup() {
         this.newEvent = {
-          date: '2018-08-20',
-          title: '',
+          date: '',
+          title: '(Нет заголовка)',
           desc: ''
         };
         this.openedPopupInfo = false;
         this.openedPopupAdd = false;
         this.dataEdit = false;
+
         this.event = [];
         this.getData();
+
+
       },
 
       editEvent() {
@@ -224,6 +249,8 @@
 
       setData() {
 
+        this.newEvent.date = this.$moment(this.newEvent.date).format('YYYY-MM-DD');
+
         let someEvent = {
           'summary': this.newEvent.title,
           'description': this.newEvent.desc,
@@ -244,8 +271,44 @@
 
       },
 
+      setDataUpdate() {
+
+        let setEvent = {
+          'summary': this.newEvent.title,
+          'description': this.newEvent.desc,
+          'start': {
+            'date': this.newEventDate
+          },
+          'end': {
+            'date': this.newEventDate
+          }
+        };
+
+        this.updateEvent.push({
+          id: '1',
+          apiId: '2',
+          dateE: this.newEventDate,
+          title: '4',
+          desc: '5',
+          creatorEmail: '6',
+          creatorName: '7'
+        });
+
+        this.api.client.calendar.events.insert({
+          'calendarId': 'primary',
+          'resource': setEvent,
+        }).then(response => {
+          this.openedPopupInfo = true;
+          this.dataEdit = true;
+        });
+
+      },
+
       getData() {                                                 /* Вывод событий */
-        this.api.client.calendar.events.list({
+
+        this.event = [];
+        let api = gapi;
+        api.client.calendar.events.list({
           'calendarId': 'primary',
           //'timeMin': (new Date()).toISOString(),                //Cобытия которые только будут
           //'showDeleted': true,                                  //Показывать удаленные события
@@ -255,6 +318,7 @@
         }).then(response => {
 
           let events = response.result.items;
+
           let i = 0;
           if (events.length > 0) {
             for (i = 0; i < events.length; i++) {                 // перебор событий
@@ -271,15 +335,26 @@
                 desc = '';
               }
 
+              let creatorName = event.creator.displayName;
+              if(creatorName == undefined){
+                creatorName = '';
+              }
+
+
               this.event.push({
                 id: 'ev-' + i,
                 apiId: eId,
                 dateE: when,
                 title: event.summary,
-                desc: desc
+                desc: desc,
+                creatorEmail: event.creator.email,
+                creatorName: creatorName
               });
+
+
             }
           } else {
+
             alert('Событий нет');                                 // Если нет ни одного события.
           }
         });
@@ -454,12 +529,10 @@
       margin: auto;
       background: #fff;
       border: 1px solid #ccc;
-      width: 300px;
+      width: 460px;
       z-index: 10;
-
       padding: 0;
       border-radius: 4px;
-      overflow: hidden;
       min-height: 0;
 
       &-btn{
@@ -526,6 +599,7 @@
       background: rgba(0, 0, 0, 0.95);
     }
     &__input{
+      width: 100%;
       margin-bottom: 20px;
     }
     &__date{
@@ -564,9 +638,6 @@
       &:not(:last-of-type) {
         border-bottom: 1px solid #eee;
       }
-      p{
-        line-height: 30px;
-      }
     }
     input,
     textarea{
@@ -597,7 +668,7 @@
       resize: none;
     }
     &__text{
-      padding: 17px 0;
+      padding: 19px 0;
     }
     &__icon{
       margin: 20px 16px 0 0;

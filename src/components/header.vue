@@ -7,7 +7,7 @@
 
 
 
-          a(href='/', @click='refresh').btn.btn_default Обновить
+          a(href='#', @click='refresh').btn.btn_default Обновить
 
         appSearch
 
@@ -17,9 +17,7 @@
 
 <script>
 
-  import Datepicker from 'vuejs-datepicker';
   import appSearch from './search'
-  import mainBlok from './main.vue'
   export default {
 
     props: ["event"],
@@ -27,14 +25,12 @@
     name: 'my-header',
 
     components: {
-      appSearch,
-      mainBlok,
-      'date-picker': Datepicker
+      appSearch
     },
 
     data () {
       return {
-        email: 'werwer',
+        email: '',
         dateNewEvent: '',
         titleEvent: '',
 
@@ -60,8 +56,8 @@
       openPopupAdd: function () {
         this.$emit('openPopupAdd', this.openedPopupAdd);
       },
-      refresh: function () {
-        
+      refresh () {
+        this.$parent.$emit('getData');
       }
     }
   }
