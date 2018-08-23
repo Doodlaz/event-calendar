@@ -16,17 +16,21 @@
           button.btn.btn_white(type='button', @click='setData') Создать
 
     .popup(v-if="openedPopupInfo")
-      .popup__wrap.event-info.popup__wrap_event-info(v-for="item in updateEvent", :class="{ 'data-edit' : dataEdit }")
+      .popup__wrap.event-info.popup__wrap_event-info(v-for="item in updateEvent", :class="{ 'data-edit' : dataEdit, 'event-here' : eventHerePopup }")
         .popup__head
           .popup__wrap-btn
-            a(href="#", @click='editEvent', v-if="!dataEdit").popup__btn.popup__btn_edit
+            a(href="#", @click='editEvent', v-if="!dataEdit && !eventHerePopup").popup__btn.popup__btn_edit
               font-awesome-icon(icon="pen").icon
-            a(href="#", @click='editEventOk(item.apiId)', v-if="dataEdit").popup__btn.popup__btn_edit
+            a(href="#", @click='editEventOk(item.apiId)', v-if="dataEdit && !eventHerePopup").popup__btn.popup__btn_edit
               font-awesome-icon(icon="check").icon
-            a(href="#", @click='delEvent(item.apiId)').popup__btn.popup__btn_del
+            a(href="#", v-if="!eventHerePopup", @click='delEvent(item.apiId)').popup__btn.popup__btn_del
               font-awesome-icon(icon="trash").icon
-            a(href="#", @click='closePopup').popup__btn.popup__btn_close
+            a(href="#", v-if="!eventHerePopup", @click='closePopup').popup__btn.popup__btn_close
               font-awesome-icon(icon="times").icon
+
+            a(href="#", v-if="eventHerePopup", @click='closePopup').popup__btn.popup__btn_close
+              font-awesome-icon(icon="times").icon
+
             .event-info__title(v-if='!dataEdit') {{item.title}}
             input(type='text', v-model='item.title', v-if='dataEdit').event-info__title
 
@@ -103,6 +107,7 @@
         openedPopupInfo: false,
         addEvent: false,
         dataEdit: false,
+        eventHerePopup: false,
 
         //---Events---
         updateEvent: [],
@@ -127,13 +132,15 @@
 
       }
     },
-    created() {},
+    created() {
+      this.searchByDate();
+    },
     mounted() {
 
       this.api = gapi;
       this.handleClientLoad();
 
-      this.$on('setDataUpdate', this.setDataUpdate);
+      this.$on('setEventHere', this.setEventHere);
       this.$on('getData', this.getData);
 
     },
@@ -200,6 +207,7 @@
         };
         this.openedPopupInfo = false;
         this.openedPopupAdd = false;
+        this.eventHerePopup = false;
         this.dataEdit = false;
 
         this.event = [];
@@ -271,7 +279,7 @@
 
       },
 
-      setDataUpdate() {
+      setEventHere() {
 
         let setEvent = {
           'summary': this.newEvent.title,
@@ -284,24 +292,54 @@
           }
         };
 
-        this.updateEvent.push({
-          id: '1',
-          apiId: '2',
-          dateE: this.newEventDate,
-          title: '4',
-          desc: '5',
-          creatorEmail: '6',
-          creatorName: '7'
-        });
-
         this.api.client.calendar.events.insert({
           'calendarId': 'primary',
           'resource': setEvent,
         }).then(response => {
+
+          this.updateEvent[0] = {
+            id: '1',
+            apiId: '2',
+            dateE: this.newEventDate,
+            title: '4',
+            desc: '5',
+            creatorEmail: '6',
+            creatorName: '7'
+          };
+
           this.openedPopupInfo = true;
           this.dataEdit = true;
+          this.eventHerePopup = true;
         });
 
+      },
+
+      searchByDate() {
+        alert('searchByDate')
+        let api = gapi;
+        api.client.calendar.events.list({
+          'calendarId': 'primary',
+          'singleEvents': true,
+          'orderBy': 'startTime'
+        }).then(response => {
+
+          let events = response.result.items;
+
+          let i = 0;
+          if (events.length > 0) {
+            for (i = 0; i < events.length; i++) {                 // перебор событий
+              let event = events[i],
+                  when = event.start.dateTime,                    // when полная Дата события со верменем если событие не на весь день
+                  eId = event.id;
+              if (!when) {                                        // Если событие всего дня то берём дату в формте yyyy-mm-dd
+                when = event.start.date;
+              }else {
+                when = when.split('T')[0]                         // Иначе если событие с временем то обрезаем всё после часового пояса что бы получить только дату в формате yyyy-mm-dd
+              }
+              console.log(when);
+            }
+          }
+        });
       },
 
       getData() {                                                 /* Вывод событий */
@@ -555,6 +593,9 @@
       min-height: 60px;
       display: flex;
       padding-left: 10px;
+      .event-here & {
+        background: #fff;
+      }
     }
     &__body{
       background: #fff;
@@ -574,6 +615,9 @@
         opacity: .8;
         path {
           fill: #fff;
+          .event-here & {
+            fill: #000;
+          }
         }
       }
       &:hover{
@@ -660,6 +704,9 @@
       border-bottom: 1px solid transparent;
       background: none;
       box-shadow: none;
+      .event-here & {
+
+      }
     }
     &__data{
       padding: 17px 0;
@@ -706,7 +753,14 @@
       }
     }
   }
+  .event-here.data-edit{
+    .event-info__title{
+      color: #000;
+      border-color: #ccc;
+      background: rgba(204, 204, 204, 0.1);
+    }
 
+  }
   .preloader{
     width: 100vw;
     height: 100vh;

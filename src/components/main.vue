@@ -16,7 +16,7 @@
         li(v-for='val, i in weekDay').calendar__week-day {{val}}
 
       ul.calendar__table
-        li(v-for='item in dayObj', :class='item.classDay', @click='testClick(item.date)').calendar__day
+        li(v-for='item in dayObj', :class='item.classDay', @click='addEventHere(item.date)').calendar__day
           span().label-date {{item.newDay}}
           .event
             .event__wrap(v-if='item.date==i.dateE', v-for='i in event', @click.stop='openPopupInfo(i)')
@@ -73,7 +73,7 @@ export default {
       this.$emit('updateEvent', this.updateEvent);
     },
 
-    testClick: function (item) {
+    addEventHere: function (item) {
 
 
       this.newEventDate = item;
@@ -82,7 +82,7 @@ export default {
       this.$emit('newEventDate', this.newEventDate);
 
 
-      this.$parent.$emit('setDataUpdate');
+      this.$parent.$emit('setEventHere');
     },
 
 
