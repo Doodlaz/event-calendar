@@ -133,7 +133,7 @@
       }
     },
     created() {
-      this.searchByDate();
+
     },
     mounted() {
 
@@ -172,6 +172,7 @@
         if (isSignedIn) {
           this.authorized = true;
           this.loading = false;
+          this.searchByDate();
           this.getData();
         } else {
           this.authorized = false;
@@ -336,7 +337,7 @@
               }else {
                 when = when.split('T')[0]                         // Иначе если событие с временем то обрезаем всё после часового пояса что бы получить только дату в формате yyyy-mm-dd
               }
-              console.log(when);
+              console.log(when + ' when');
             }
           }
         });
