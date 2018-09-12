@@ -23,14 +23,12 @@
               font-awesome-icon(icon="pen").icon
             a(href="#", @click='editEventOk(item.apiId)', v-if="dataEdit && !eventHerePopup").popup__btn.popup__btn_edit
               font-awesome-icon(icon="check").icon
-            a(href="#", v-if="!eventHerePopup", @click='delEvent(item.apiId)').popup__btn.popup__btn_del
-              font-awesome-icon(icon="trash").icon
+            a(href="#", @click='delEvent(item.apiId)').popup__btn.popup__btn_del
+              font-awesome-icon(icon="trash", v-if="!eventHerePopup").icon
+              font-awesome-icon(icon="times", v-if="eventHerePopup").icon
             a(href="#", v-if="!eventHerePopup", @click='closePopup').popup__btn.popup__btn_close
               font-awesome-icon(icon="times").icon
-
-            a(href="#", v-if="eventHerePopup", @click='closePopup').popup__btn.popup__btn_close
-              font-awesome-icon(icon="times").icon
-
+              
             .event-info__title(v-if='!dataEdit') {{item.title}}
             input(type='text', v-model='item.title', v-if='dataEdit').event-info__title
 
@@ -47,6 +45,7 @@
           .event-info__item(v-if="item.creatorName.length > 1 || dataEdit")
             font-awesome-icon(icon="user").event-info__icon
             p.event-info__text {{item.creatorName}}
+            button.btn.btn_default(@click="editEventOk(item.apiId)", v-if="eventHerePopup") Sign Out
 
     //----popups-END----
 
@@ -56,7 +55,7 @@
 
       .container(v-if='authorized')
         button.btn.btn_default.btn_sign-out(@click="handleSignoutClick") Sign Out
-
+        
       app-header(:event="event", v-if='authorized', @openPopupAdd="openedPopupAdd=$event")
       .login(v-if='!authorized')
         button.btn.btn_default(@click="handleAuthClick") Вход
@@ -210,11 +209,8 @@
         this.openedPopupAdd = false;
         this.eventHerePopup = false;
         this.dataEdit = false;
-
         this.event = [];
         this.getData();
-
-
       },
 
       editEvent() {
@@ -239,14 +235,13 @@
           'eventId': apiId,
           'resource': someEvent, // Объекат с новыми данными события
         }).then(response => {
-          this.event = [];
-          this.getData();
+          this.closePopup();
         });
 
       },
 
       delEvent(apiId) {
-
+        this.getData();
         this.api.client.calendar.events.delete({    // Удаление события по eventId
           'calendarId': 'primary',
           'eventId': apiId
@@ -281,7 +276,7 @@
       },
 
       setEventHere() {
-
+        console.log('setEventHere()');
         let setEvent = {
           'summary': this.newEvent.title,
           'description': this.newEvent.desc,
@@ -297,26 +292,17 @@
           'calendarId': 'primary',
           'resource': setEvent,
         }).then(response => {
-
-          this.updateEvent[0] = {
-            id: '1',
-            apiId: '2',
-            dateE: this.newEventDate,
-            title: '4',
-            desc: '5',
-            creatorEmail: '6',
-            creatorName: '7'
-          };
-
+          this.searchByDate(this.newEventDate);
           this.openedPopupInfo = true;
           this.dataEdit = true;
+          this.getData();
           this.eventHerePopup = true;
         });
 
       },
 
-      searchByDate() {
-        alert('searchByDate')
+      searchByDate(date) {
+        console.log(date);
         let api = gapi;
         api.client.calendar.events.list({
           'calendarId': 'primary',
@@ -337,14 +323,33 @@
               }else {
                 when = when.split('T')[0]                         // Иначе если событие с временем то обрезаем всё после часового пояса что бы получить только дату в формате yyyy-mm-dd
               }
+
               console.log(when + ' when');
+
+              let creatorName = event.creator.displayName;
+              if(creatorName == undefined){
+                creatorName = '';
+              }
+              if(when == date){
+                
+                this.updateEvent[0] = {
+                  id: 'ev-' + i,
+                  apiId: eId,
+                  dateE: when,
+                  title: this.newEvent.title,
+                  desc: this.newEvent.desc,
+                  creatorEmail: event.creator.email,
+                  creatorName: creatorName
+                };
+                
+              }
+
             }
           }
         });
       },
 
       getData() {                                                 /* Вывод событий */
-
         this.event = [];
         let api = gapi;
         api.client.calendar.events.list({
